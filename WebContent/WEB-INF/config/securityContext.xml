@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+	xmlns:sec="http://www.springframework.org/schema/security" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+				        http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+				        http://www.springframework.org/schema/security 
+				        http://www.springframework.org/schema/security/spring-security-3.0.xsd" 
+	default-autowire="byType" default-lazy-init="true">
+
+	<description>
+		This is the config file for the Security configuration of
+		SMS - Zid 9/3/2019
+	</description>
+
+	<sec:global-method-security secured-annotations="enabled" />
+
+	<bean id="authenticationEntryPoint" class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
+		<property name="loginFormUrl" value="/institute/login" />
+	</bean>
+
+	<sec:http entry-point-ref="authenticationEntryPoint" access-denied-page="/WEB-INF/view/error/accessDenied.jsp" access-decision-manager-ref="accessDecisionManager" >
+		<sec:intercept-url pattern="/css/**" filters="none" />
+		<sec:intercept-url pattern="/fonts/**" filters="none" />
+		<sec:intercept-url pattern="/js/**" filters="none" />
+		<sec:intercept-url pattern="/codebase/**" filters="none" />
+		<sec:intercept-url pattern="/images/**" filters="none" />
+		<sec:intercept-url pattern="/dm-uploader/**" filters="none" />
+		<sec:intercept-url pattern="/faq/**" filters="none" />
+		<sec:intercept-url pattern="/fullcalendar/**" filters="none" />
+		<sec:intercept-url pattern="/dist/**" filters="none" />
+		<sec:intercept-url pattern="/institute/login*" filters="none" />
+		<!-- <sec:intercept-url pattern="/institute/secured/admin/schedule/allschedule" access="DOCTOR,SYSTEM_ADMIN,HEAD_DOCTOR" /> -->
+		<!-- <sec:intercept-url pattern="/institute/logoutSuccess*" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<sec:intercept-url pattern="/institute/forgot*" access="IS_AUTHENTICATED_ANONYMOUSLY" filters="none" /> -->
+		<sec:intercept-url pattern="/institute/secured/**" access="SYSTEM_ADMIN,SECRETARY,FINANCIALS,OPERATIONS,HEAD_DOCTOR" />
+		<sec:intercept-url pattern="/dwr/**" filters="none" />
+		
+		<sec:intercept-url pattern="/**" filters="none" />
+
+		<!-- <sec:intercept-url pattern="/clinical/sms/notif*" filters="none"/> <sec:intercept-url pattern="/clinical/sms/patient/notif*" filters="none"/> <sec:intercept-url pattern="/clinical/sms/doctor/notif*" filters="none"/> <sec:intercept-url pattern="/clinical/patient/search*" filters="none"/> <sec:intercept-url pattern="/clinical/patient/info*" filters="none"/> <sec:intercept-url pattern="/clinical/patient/addtoQueue*" filters="none"/> <sec:intercept-url pattern="/clinical/patient/service*" filters="none"/> 
+			<sec:intercept-url pattern="/**" filters="none" /> -->
+
+		<sec:form-login authentication-failure-url="/institute/login?error=true" 
+				default-target-url="/institute/secured/student/module" 
+				login-page="/institute/login" 
+				always-use-default-target="true"/>
+		<sec:logout invalidate-session="true" logout-success-url="/institute/login" />
+	</sec:http>
+
+	<!-- Authentication Manager -->
+	<sec:authentication-manager>
+		<sec:authentication-provider>
+			<sec:password-encoder hash="md5" />
+			<sec:jdbc-user-service data-source-ref="dataSource" users-by-username-query="select username_pk loginname, password from users where username_pk = ?" 
+			authorities-by-username-query="select users.username_pk loginname, roles.role_key role from users, roles 
+							WHERE roles.role_id_pk = users.role_id_fk 
+							and users.username_pk=?" />
+		</sec:authentication-provider>
+	</sec:authentication-manager>
+
+	<bean id="accessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
+		<property name="decisionVoters">
+			<bean class="org.springframework.security.access.vote.RoleVoter">
+
+				<!-- SPRING SECURITY ROLES DEFAULTS TO ROLE_*, SINCE WE ONLY HAVE RECEIVER, MANAGER, AND NORMAL WE HAVE TO REMOVE THE PREFIX ROLE_. INSTEAD OF USING ROLE_RECEIVER, ROLE_MANAGER, ROLE_NORMAL, USE RECIEVER, MANAGER AND NORMAL INSTEAD, REMOVE 'ROLE_' -->
+
+				<property name="rolePrefix" value="" />
+			</bean>
+			
+			
+		</property>
+		<!-- <bean class="org.springframework.security.web.access.expression.WebExpressionVoter"></bean> -->
+	</bean>
+	
+</beans>
